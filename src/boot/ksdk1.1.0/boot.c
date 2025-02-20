@@ -202,7 +202,7 @@ typedef enum
 	kWarpFlashRTCTPRBitField 		= 0b100,
 	kWarpFlashADXL362BitField 		= 0b1000,
 	kWarpFlashAMG8834BitField 		= 0b10000,
-	kWarpFlashMMA8541QBitField		= 0b100000,
+	kWarpFlashMMA8451QBitField		= 0b100000, 
 	kWarpFlashMAG3110BitField		= 0b1000000,
 	kWarpFlashL3GD20HBitField		= 0b10000000,
 	kWarpFlashBME680BitField		= 0b100000000,
@@ -1662,7 +1662,7 @@ main(void)
 #endif
 
 #if (WARP_BUILD_ENABLE_DEVMMA8451Q)
-		initMMA8451Q(	0x1C	/* i2cAddress */,	kWarpDefaultSupplyVoltageMillivoltsMMA8451Q	);
+		initMMA8451Q(	0x1D	/* i2cAddress */,	kWarpDefaultSupplyVoltageMillivoltsMMA8451Q	);
 #endif
 
 #if (WARP_BUILD_ENABLE_DEVLPS25H)
@@ -5051,7 +5051,7 @@ flashDecodeSensorBitField(uint16_t sensorBitField, uint8_t sensorIndex, uint8_t*
 	/*
 	 * MMA8451Q
 	*/
-	if (sensorBitField & kWarpFlashMMA8541QBitField)
+	if (sensorBitField & kWarpFlashMMA8451QBitField)
 	{
 		numberOfSensorsFound++;
 		if (numberOfSensorsFound - 1 == sensorIndex)

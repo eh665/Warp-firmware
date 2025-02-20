@@ -80,10 +80,10 @@ enum _gpio_pins
 		kWarpPinUnusedPTB10			= GPIO_MAKE_PIN(HW_GPIOB, 10),
 		kWarpPinUnusedPTB11			= GPIO_MAKE_PIN(HW_GPIOB, 11),
 		kWarpPinUnusedPTB13			= GPIO_MAKE_PIN(HW_GPIOB, 13),
-
-		kWarpPinUnusedPTA0			= GPIO_MAKE_PIN(HW_GPIOA, 0),
-		kWarpPinUnusedPTA1			= GPIO_MAKE_PIN(HW_GPIOA, 1),
-		kWarpPinUnusedPTA2			= GPIO_MAKE_PIN(HW_GPIOA, 2),
+		
+		//kWarpPinUnusedPTA0			= GPIO_MAKE_PIN(HW_GPIOA, 0),
+		//kWarpPinUnusedPTA1			= GPIO_MAKE_PIN(HW_GPIOA, 1),
+		//kWarpPinUnusedPTA2			= GPIO_MAKE_PIN(HW_GPIOA, 2),
 		kWarpPinUnusedPTA3			= GPIO_MAKE_PIN(HW_GPIOA, 3),
 		kWarpPinUnusedPTA4			= GPIO_MAKE_PIN(HW_GPIOA, 4),
 		kWarpPinUnusedPTA5			= GPIO_MAKE_PIN(HW_GPIOA, 5),
@@ -92,6 +92,8 @@ enum _gpio_pins
 		kWarpPinUnusedPTA8			= GPIO_MAKE_PIN(HW_GPIOA, 8),
 		kWarpPinUnusedPTA9			= GPIO_MAKE_PIN(HW_GPIOA, 9),
 		kWarpPinUnusedPTA12			= GPIO_MAKE_PIN(HW_GPIOA, 12),
+
+		kWarpPinSI4705_nRST		= GPIO_MAKE_PIN(HW_GPIOB, 2),
 	#else
 		#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
 			kGlauxPinFlash_SPI_nCS		= GPIO_MAKE_PIN(HW_GPIOB, 2),
