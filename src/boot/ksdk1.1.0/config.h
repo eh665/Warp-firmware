@@ -110,6 +110,8 @@
 #define WARP_BUILD_ENABLE_DEVSI7021   	0
 #define WARP_BUILD_ENABLE_DEVTCS34725 	0
 #define WARP_BUILD_ENABLE_DEVBNO055 	0
+#define WARP_BUILD_ENABLE_DEVSSD1331    1
+#define WARP_BUILD_ENABLE_DEVINA219 	1
 #else
 /*
  *	Otherwise: Edit these to set which code paths are activated in the firmware compilation
@@ -202,4 +204,5 @@ typedef enum
 	kWarpDefaultSupplyVoltageMillivoltsICE40       		= 1800,
 	kWarpDefaultSupplyVoltageMillivoltsBNO055      		= 2500,
 	kWarpDefaultSupplyVoltageMillivoltsRF430CL331H      	= 2500,
+	kWarpDefaultSupplyVoltageMillivoltsINA219    		= 3000,
 } WarpDefaults;

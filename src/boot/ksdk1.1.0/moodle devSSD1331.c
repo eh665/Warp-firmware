@@ -1,10 +1,5 @@
 #include <stdint.h>
 
-/*
- *	config.h needs to come first
- */
-#include "config.h" // Note, moodle version does not include this line
-
 #include "fsl_spi_master_driver.h"
 #include "fsl_port_hal.h"
 
@@ -13,8 +8,8 @@
 #include "warp.h"
 #include "devSSD1331.h"
 
-volatile uint8_t	inBuffer[32]; // Note, moodle version has this be 32 instead of 1
-volatile uint8_t	payloadBytes[32]; // Note, moodle version has this be 32 instead of 1
+volatile uint8_t	inBuffer[32];
+volatile uint8_t	payloadBytes[32];
 
 
 /*
@@ -77,7 +72,7 @@ devSSD1331init(void)
 	PORT_HAL_SetMuxMode(PORTA_BASE, 8u, kPortMuxAlt3);
 	PORT_HAL_SetMuxMode(PORTA_BASE, 9u, kPortMuxAlt3);
 
-	//enableSPIpins();
+	enableSPIpins();
 
 	/*
 	 *	Override Warp firmware's use of these pins.
@@ -139,15 +134,15 @@ devSSD1331init(void)
 	writeCommand(kSSD1331CommandCONTRASTC);		// 0x83
 	writeCommand(0x7D);
 	writeCommand(kSSD1331CommandDISPLAYON);		// Turn on oled panel
-	// Moodle version includes: //	SEGGER_RTT_WriteString(0, "\r\n\tDone with initialization sequence...\n");
-	//SEGGER_RTT_WriteString(0, "\r\n\tDone with initialization sequence...\n");
+//	SEGGER_RTT_WriteString(0, "\r\n\tDone with initialization sequence...\n");
+
 	/*
 	 *	To use fill commands, you will have to issue a command to the display to enable them. See the manual.
 	 */
 	writeCommand(kSSD1331CommandFILL);
 	writeCommand(0x01);
-	//	Moodle version includes: //	SEGGER_RTT_WriteString(0, "\r\n\tDone with enabling fill...\n");
-	//SEGGER_RTT_WriteString(0, "\r\n\tDone with enabling fill...\n");
+//	SEGGER_RTT_WriteString(0, "\r\n\tDone with enabling fill...\n");
+
 	/*
 	 *	Clear Screen
 	 */
@@ -156,35 +151,22 @@ devSSD1331init(void)
 	writeCommand(0x00);
 	writeCommand(0x5F);
 	writeCommand(0x3F);
-	//	Moodle version includes: // SEGGER_RTT_WriteString(0, "\r\n\tDone with screen clear...\n");
-	//SEGGER_RTT_WriteString(0, "\r\n\tDone with screen clear...\n");
+//	SEGGER_RTT_WriteString(0, "\r\n\tDone with screen clear...\n");
+
 
 
 	/*
-	 *	Any post-initialization drawing commands go here.
-	 */
-	//...
-	writeCommand(kSSD1331CommandDRAWRECT);
-	writeCommand(0x00); // col address start
-	writeCommand(0x00); // row address start
-	writeCommand(0x5F); // col address end
-	writeCommand(0x3F); // row addresss end
-	writeCommand(0x00); // colour C of line
-	writeCommand(0xFF); // colour B of line max green
-	writeCommand(0x00); // colour A of line
-	writeCommand(0x00); // colour C of fill
-	writeCommand(0xFF); // colour B of fill max green
-	writeCommand(0x00); // colour A of fill
-	writeCommand(kSSD1331CommandDISPLAYON);		// Turn on oled panel
-
-	/* Moodle version includes:
 	 *	Read the manual for the SSD1331 (SSD1331_1.2.pdf) to figure
 	 *	out how to fill the entire screen with the brightest shade
 	 *	of green.
 	 */
 
-	// Moodle version includes: //	SEGGER_RTT_WriteString(0, "\r\n\tDone with draw rectangle...\n");
-	//SEGGER_RTT_WriteString(0, "\r\n\tDone with draw rectangle...\n");
+	...
+
+
+//	SEGGER_RTT_WriteString(0, "\r\n\tDone with draw rectangle...\n");
+
+
 
 	return 0;
 }

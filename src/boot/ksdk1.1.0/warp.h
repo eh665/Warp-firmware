@@ -103,6 +103,7 @@ typedef enum
 	kWarpSensorAS7263,
 	kWarpSensorSCD30,
 	kWarpSensorRF430CL331H,
+	kWarpSensorINA219,
 } WarpSensorDevice;
 
 typedef enum
@@ -114,6 +115,9 @@ typedef enum
 {
 	kWarpSensorConfigurationRegisterMMA8451QF_SETUP				= 0x09,
 	kWarpSensorConfigurationRegisterMMA8451QCTRL_REG1			= 0x2A,
+
+	kWarpSensorConfigurationRegisterINA219Config			= 0x01,
+	kWarpSensorConfigurationRegisterINA219Calib			= 0x05,
 
 	kWarpSensorConfigurationRegisterMAG3110CTRL_REG1			= 0x10,
 	kWarpSensorConfigurationRegisterMAG3110CTRL_REG2			= 0x11,
@@ -202,6 +206,18 @@ typedef enum
 	kWarpSensorOutputRegisterMMA8451QOUT_Y_LSB			= 0x04,
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_MSB			= 0x05,
 	kWarpSensorOutputRegisterMMA8451QOUT_Z_LSB			= 0x06,
+
+	// will need to add some stuff here later for
+	kWarpSensorOutputRegisterINA219OUT_shunt = 0x01,
+	// kWarpSensorOutputRegisterINA219OUT_shunt_LSB 
+	kWarpSensorOutputRegisterINA219OUT_bus = 0x02,
+	// kWarpSensorOutputRegisterINA219OUT_bus_LSB
+	kWarpSensorOutputRegisterINA219OUT_power = 0x03,
+	// kWarpSensorOutputRegisterINA219OUT_power_LSB
+	kWarpSensorOutputRegisterINA219OUT_current = 0x04,
+	// kWarpSensorOutputRegisterINA219OUT_current_LSB
+
+
 
 	kWarpSensorOutputRegisterMAG3110OUT_X_MSB			= 0x01,
 	kWarpSensorOutputRegisterMAG3110OUT_X_LSB			= 0x02,
