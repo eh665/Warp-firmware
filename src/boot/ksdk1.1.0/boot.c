@@ -2764,62 +2764,61 @@ main(void)
 
 
 			/*
-			 *	Detect motion state, starting with code from case j, then combining some stuff from printAllSensors
-			 * 1, 1, 1, 0000, 0000,2000,00 (instructions from CW2 for j)
-			 */
-			 case 'y':
-			 {
-				 bool		autoIncrement = 1; //Auto-increment from base address 0x%02x? ['0' | '1']> 
-				 bool		chatty = 1; //Chatty? ['0' | '1']>
-				 bool 		hexModeFlag = false; // so that it prints in converted mode
-				 int		spinDelay = 0000; //Inter-operation spin delay in milliseconds (e.g., '0000')>
-				 int 		repetitionsPerAddress = 0000;
-				 int 		chunkReadsPerAddress = 1; //Chunk reads per address (e.g., '1')> 
-				 int		adaptiveSssupplyMaxMillivolts = 2000; //Maximum voltage for adaptive supply (e.g., '0000')> 
-				 int 		read_time = 10000;
-				 uint8_t	referenceByte = 00;//Reference byte for comparisons (e.g., '3e')>
-				 uint32_t 	timeAtStart;
-				 uint32_t 	no_of_readings;
-				 uint32_t 	delay_needed;
+			*	Detect motion state, starting with code from case j, then combining some stuff from printAllSensors
+			* 1, 1, 1, 0000, 0000,2000,00 (instructions from CW2 for j)
+			*/
+			case 'y':
+			{
+				bool		autoIncrement = 1; //Auto-increment from base address 0x%02x? ['0' | '1']> 
+				bool		chatty = 1; //Chatty? ['0' | '1']>
+				bool 		hexModeFlag = false; // so that it prints in converted mode
+				int			spinDelay = 0000; //Inter-operation spin delay in milliseconds (e.g., '0000')>
+				int 		repetitionsPerAddress = 0000;
+				int 		chunkReadsPerAddress = 1; //Chunk reads per address (e.g., '1')> 
+				int			adaptiveSssupplyMaxMillivolts = 2000; //Maximum voltage for adaptive supply (e.g., '0000')> 
+				int 		read_time = 10000;
+				uint8_t		referenceByte = 00;//Reference byte for comparisons (e.g., '3e')>
+				uint32_t 	timeAtStart;
+				uint32_t 	no_of_readings;
+				uint32_t 	delay_needed;
 
-				 // set target sensor to be the accelerometer, with supply voltage 1.8V
-				 menuTargetSensor = kWarpSensorMMA8451Q;
-				 menuI2cDevice = &deviceMMA8451QState;
-				 gWarpCurrentSupplyVoltage = 1800;
+				// set target sensor to be the accelerometer, with supply voltage 1.8V
+				menuTargetSensor = kWarpSensorMMA8451Q;
+				menuI2cDevice = &deviceMMA8451QState;
+				gWarpCurrentSupplyVoltage = 1800;
 
-				
-				 // Set how many readings we want to take in the 10 second window. 
-				 warpPrint("\r\n\tReadings in 10 seconds (e.g., '0040').> ");
-				 no_of_readings = read4digits();
-				 
-				 // Make sure it doesn't break if you enter 0000
-				 if (no_of_readings==0000){
-					no_of_readings=1;
-				 }
+				warpPrint("\r\n\tReadings in 10 seconds (e.g., '0040').> ");
+				no_of_readings = read4digits();
+				if (no_of_readings == 0)
+					no_of_readings = 1;
+				if (no_of_readings > 200)
+					no_of_readings = 200;
 
-				 // Work out how long the delay should be after each reading
-				 delay_needed = read_time / no_of_readings;
-				 warpPrint("\r\n\t Taking %d readings, with delay of %dms after each one.\n\n", no_of_readings, delay_needed);
+				delay_needed = read_time / no_of_readings;
 
-				 warpPrint("\r\n\tRepeating dev%d @ 0x%02x, reps=%d, pull=%d, delay=%dms:\n\n",
-					 menuTargetSensor, menuRegisterAddress, repetitionsPerAddress, spinDelay);
+				warpPrint("\r\n\t Taking %d readings, with delay of %dms after each one.\n\n", no_of_readings, delay_needed);
+				warpPrint("\r\n\tRepeating dev%d @ 0x%02x, reps=%d, pull=%d, delay=%dms:\n\n",
+					menuTargetSensor, menuRegisterAddress, repetitionsPerAddress, spinDelay);
 
-				
-				warpPrint(" MMA8451 x, MMA8451 y, MMA8451 z,");
-				timeAtStart = OSA_TimeGetMsec();
-				
-				for (int i=0; i < no_of_readings; i++) {
-				 //printSensorDataMMA8451Q(hexModeFlag); // tried this but it didn't work for some reason, kept just printing the same line each time
-				 printAllSensors(false /* printHeadersAndCalibration */, hexModeFlag,
-					delay_needed, false /* loopForever */); 
-	
-				 OSA_TimeDelay(delay_needed);	// tried without this, but the menuDelay is not properly implemented in printAllSensors function	
+				int16_t t_readings[200] = {};
+				int16_t x_readings[200] = {};
+				int16_t y_readings[200] = {};
+				int16_t z_readings[200] = {};
+				for (int i = 0; i < no_of_readings; i++) {
+					warpPrint("ORIGINAL : ");
+					printAllSensors(false , false, delay_needed, false);
+
+					warpPrint("NEW : ");
+					t_readings[i] = OSA_TimeGetMsec();
+					if (readSensorMMA8451Q(&x_readings[i], &y_readings[i], &z_readings[i]) == kWarpStatusOK) {
+						warpPrint("\r\n\t t=%dms, x=%d, y=%d, z=%d", t_readings[i], x_readings[i], y_readings[i], z_readings[i]);
+					}
+					else {
+						warpPrint("\r\n\t t=%d ms, reading error", t_readings[i]);
+					}
+				 	OSA_TimeDelay(delay_needed);
 				}
-				warpPrint("\r\n\t Time at start: %dms \n\n",timeAtStart);
-				warpPrint("\r\n\t Time at end: %dms \n\n",OSA_TimeGetMsec());
-				
-
-				 break;
+				break;
 			 }
 
 

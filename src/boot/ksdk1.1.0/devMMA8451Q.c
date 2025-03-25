@@ -421,3 +421,29 @@ appendSensorDataMMA8451Q(uint8_t* buf)
 	}
 	return index;
 }
+
+static int16_t convertDataToInt16()
+{
+	const uint16_t msb = ((uint16_t)deviceMMA8451QState.i2cBuffer[0]) & 0xFF;
+	const uint16_t lsb = ((uint16_t)deviceMMA8451QState.i2cBuffer[1]) & 0xFF;
+	return (((msb << 6) | (lsb >> 2)) ^ (1 << 13)) - (1 << 13);
+}
+
+WarpStatus readSensorMMA8451Q(int16_t *x, int16_t *y, int16_t *z)
+{
+	warpScaleSupplyVoltage(deviceMMA8451QState.operatingVoltageMillivolts);
+
+	if (readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_X_MSB, 2) != kWarpStatusOK)
+		return kWarpStatusDeviceCommunicationFailed;
+	*x = convertDataToInt16();
+
+	if (readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_Y_MSB, 2) != kWarpStatusOK)
+		return kWarpStatusDeviceCommunicationFailed;
+	*y = convertDataToInt16();
+
+	if (readSensorRegisterMMA8451Q(kWarpSensorOutputRegisterMMA8451QOUT_Z_MSB, 2) != kWarpStatusOK)
+		return kWarpStatusDeviceCommunicationFailed;
+	*z = convertDataToInt16();
+
+	return kWarpStatusOK;
+}
