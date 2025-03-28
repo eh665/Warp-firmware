@@ -1180,6 +1180,24 @@ printPinDirections(void)
 }
 */
 
+
+static void findMinMax(int16_t arr[], int length, int16_t *max, int16_t *min)
+{
+	*max = arr[0];
+	*min = arr[0];
+
+	for (int i = 1; i < length; i++) {
+    	// Update max if arr[i] is larger
+    	if (arr[i] > *max)
+        	*max = arr[i];
+
+    	// Update min if arr[i] is smaller
+    	if (arr[i] < *min)
+        	*min = arr[i];
+	}
+}
+
+
 void
 dumpProcessorState(void)
 {
@@ -2760,25 +2778,13 @@ main(void)
 
 
 
-
-
-
 			/*
 			*	Detect motion state, starting with code from case j, then combining some stuff from printAllSensors
 			* 1, 1, 1, 0000, 0000,2000,00 (instructions from CW2 for j)
 			*/
 			case 'y':
 			{
-				bool		autoIncrement = 1; //Auto-increment from base address 0x%02x? ['0' | '1']> 
-				bool		chatty = 1; //Chatty? ['0' | '1']>
-				bool 		hexModeFlag = false; // so that it prints in converted mode
-				int			spinDelay = 0000; //Inter-operation spin delay in milliseconds (e.g., '0000')>
-				int 		repetitionsPerAddress = 0000;
-				int 		chunkReadsPerAddress = 1; //Chunk reads per address (e.g., '1')> 
-				int			adaptiveSssupplyMaxMillivolts = 2000; //Maximum voltage for adaptive supply (e.g., '0000')> 
 				int 		read_time = 10000;
-				uint8_t		referenceByte = 00;//Reference byte for comparisons (e.g., '3e')>
-				uint32_t 	timeAtStart;
 				uint32_t 	no_of_readings;
 				uint32_t 	delay_needed;
 
@@ -2787,28 +2793,35 @@ main(void)
 				menuI2cDevice = &deviceMMA8451QState;
 				gWarpCurrentSupplyVoltage = 1800;
 
+#define MAX_ACCEL_READINGS 40
+
 				warpPrint("\r\n\tReadings in 10 seconds (e.g., '0040').> ");
 				no_of_readings = read4digits();
 				if (no_of_readings == 0)
 					no_of_readings = 1;
-				if (no_of_readings > 200)
-					no_of_readings = 200;
+				if (no_of_readings > MAX_ACCEL_READINGS)
+					no_of_readings = MAX_ACCEL_READINGS;
 
 				delay_needed = read_time / no_of_readings;
 
 				warpPrint("\r\n\t Taking %d readings, with delay of %dms after each one.\n\n", no_of_readings, delay_needed);
-				warpPrint("\r\n\tRepeating dev%d @ 0x%02x, reps=%d, pull=%d, delay=%dms:\n\n",
-					menuTargetSensor, menuRegisterAddress, repetitionsPerAddress, spinDelay);
+				//warpPrint("\r\n\tRepeating dev%d @ 0x%02x, reps=%d, pull=%d, delay=%dms:\n\n",
+				//	menuTargetSensor, menuRegisterAddress, repetitionsPerAddress, spinDelay);
 
-				int16_t t_readings[200] = {};
-				int16_t x_readings[200] = {};
-				int16_t y_readings[200] = {};
-				int16_t z_readings[200] = {};
+				// Set sensor to continuously read
+				configureSensorMMA8451Q(
+					0x00, /* Payload: Disable FIFO */
+					0x01  /* Normal read 8bit, 800Hz, normal, active mode */
+				);
+
+				int16_t t_readings[MAX_ACCEL_READINGS] = {};
+				int16_t x_readings[MAX_ACCEL_READINGS] = {};
+				int16_t y_readings[MAX_ACCEL_READINGS] = {};
+				int16_t z_readings[MAX_ACCEL_READINGS] = {};
+
+				readSensorMMA8451Q(&x_readings[0], &y_readings[0], &z_readings[0]); // Throw away first reading
+
 				for (int i = 0; i < no_of_readings; i++) {
-					warpPrint("ORIGINAL : ");
-					printAllSensors(false , false, delay_needed, false);
-
-					warpPrint("NEW : ");
 					t_readings[i] = OSA_TimeGetMsec();
 					if (readSensorMMA8451Q(&x_readings[i], &y_readings[i], &z_readings[i]) == kWarpStatusOK) {
 						warpPrint("\r\n\t t=%dms, x=%d, y=%d, z=%d", t_readings[i], x_readings[i], y_readings[i], z_readings[i]);
@@ -2818,7 +2831,74 @@ main(void)
 					}
 				 	OSA_TimeDelay(delay_needed);
 				}
-				break;
+				
+				int16_t x_max, x_min, y_max, y_min, z_max, z_min; 
+				// Get min and max readings	
+				findMinMax(&x_readings[0], no_of_readings, &x_max, &x_min);
+            	findMinMax(&y_readings[0], no_of_readings, &y_max, &y_min);
+            	findMinMax(&z_readings[0], no_of_readings, &z_max, &z_min);
+
+				warpPrint("\r\n\t x min=%d, x max=%d, y min=%d, y max=%d, z min=%d, z max=%d", x_min, x_max, y_min, y_max, z_min, z_max);
+			
+				// The largest 'in palm' variation we saw for x was around 600, so we will set the threshold for 'stationary' to be 800 counts
+				
+				int16_t delta_x = x_max - x_min;
+				int16_t delta_y = y_max - y_min;
+				int16_t delta_z = z_max - z_min;
+				int16_t mid_x;
+				int16_t mid_z;
+				int16_t percent_uncertainty;
+				warpPrint("\r\n\t delta_x = %d, delta_y = %d, delta_z = %d", delta_x, delta_y, delta_z);
+
+				if (delta_x < 800 && delta_y < 800 && delta_z < 800){
+					warpPrint("\r\n\t Stationary, percentage uncertainty is incorrect:");
+					int16_t percent_uncertainty = 10000*100*(delta_x/800);
+					warpPrint(" delta_x/800 = %d x 10^-4,", percent_uncertainty);
+					percent_uncertainty = 10000*100*(delta_y/800);
+					warpPrint(" delta_y/800 = %d x 10^-4,", percent_uncertainty);
+					percent_uncertainty = 10000*100*(delta_z/800);
+					warpPrint(" delta_z/800 = %d x 10^-4", percent_uncertainty);
+					
+					// then it's probably stationary. take the mid value of x and compare it to z
+					// would rather have used the median to try avoid issues due to  outliers, but qsort was causing memory issues	
+					mid_x = (x_min + x_max)/2;
+					mid_z = (z_min + z_max)/2;
+
+					if (mid_x > 2000 && mid_z < 2000){
+						int16_t percent_uncertainty = (delta_x/(mid_x - mid_z))*100;
+						warpPrint("\r\n\t On right side, percent uncertainty is incorrect = %d", percent_uncertainty);
+						}
+					if (mid_x < -2000 && mid_z < 2000){
+						int16_t percent_uncertainty = (delta_x/(mid_x + mid_z)) * 100;
+						warpPrint("\r\n\t On left side, percentage uncertainty is incorrect = %d", percent_uncertainty);
+						}
+					if (mid_x < 2000 && mid_z > 2000){
+						int16_t percent_uncertainty = (delta_z/(mid_z - mid_x)) * 100;
+						warpPrint("\r\n\t Face up, percentage uncertainty is incorrect = %d", percent_uncertainty);
+						}
+					if (mid_x < 2000 && mid_z < -2000){
+						int16_t percent_uncertainty = (delta_z/(mid_z + mid_x)) * 100;
+						warpPrint("\r\n\t Face down, percentage uncertainty is incorrect = %d", percent_uncertainty);
+						}
+					if (mid_x < 2000 && mid_x > -2000 && mid_z < 2000 && mid_z > 2000){
+						// may be top or bottom but didn't have time to test this (or may be in tilted)
+						warpPrint("\r\n\t Cannot determine orientation");
+					}
+					} else {
+						// can assume it's moving, want to look for a fall, so looking for delta to be more than 2000
+						// we know that 4096 = g , so if it's more than 4096, it's being moved faster than freefall
+						// we'll use the in palm values to give an estimate of the typical Type A error
+						//int16_t in_palm_z = 290;
+						if (delta_z < 5000){
+							warpPrint("\r\n\t Falling, percentage uncertainty is incorrect = %d", (int)100*(290/delta_z));
+						}
+						if (delta_x > 5000 || delta_y > 5000 || delta_z > 5000 ){
+							warpPrint("\r\n\t Moving too fast for freefall, percentage uncertainty: x = %d, y = %d, z = %d", (int)100*((delta_x-4096)/delta_x),(int)100*((delta_y-4096)/delta_y),(int)100*((delta_z-4096)/delta_z));
+						}
+					}
+					// if we wanted to improve fall detection, we would record the indicies of the min and max values, and look at the values either side of them to look for rapid changes
+
+						break;
 			 }
 
 
